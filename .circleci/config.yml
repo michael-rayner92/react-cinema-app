@@ -69,7 +69,7 @@ jobs:
       - checkout
       - run:
           name: Display Current Branch
-          command: eco ${CIRCLE_BRANCH}
+          command: echo ${CIRCLE_BRANCH}
       - run:
           name: Installing AWS CLI
           working_directory: /
