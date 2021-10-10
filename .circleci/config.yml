@@ -9,14 +9,11 @@ jobs:
       - checkout
       - run:
           name: Display Current Branch
-          command: echo ${CURRENT_BRANCH}
+          command: echo ${CIRCLE_BRANCH}
       - restore_cache:
           keys:
             - yarn-deps-{{ checksum "yarn.lock" }}
             - yarn-deps-
-      # - run:
-      #     name: Install Yarn
-      #     command: npm install --global yarn
       - run:
           name: Install Dependencies
           command: yarn install
@@ -35,7 +32,7 @@ jobs:
       - checkout
       - run:
           name: Display Current Branch
-          command: eco ${CURRENT_BRANCH}
+          command: eco ${CIRCLE_BRANCH}
       - run:
           name: Installing AWS CLI
           working_directory: /
@@ -54,10 +51,10 @@ jobs:
       - run:
           name: Deploy to AWS S3
           command: |
-            if ["${CURRENT_BRANCH}" == "main"] |
+            if ["${CIRCLE_BRANCH}" == "main"] |
             then
               aws --region ${AWS_REGION} s3 sync ~/project/build s3://${AWS_BUCKET_PRODUCTION} --delete
-            elif ["${CURRENT_BRANCH} == "staging"] |
+            elif ["${CIRCLE_BRANCH} == "staging"] |
             then 
               aws --region ${AWS_REGION} s3 sync ~/project/build s3://${AWS_BUCKET_STAGING} --delete
             else
@@ -72,7 +69,7 @@ jobs:
       - checkout
       - run:
           name: Display Current Branch
-          command: eco ${CURRENT_BRANCH}
+          command: eco ${CIRCLE_BRANCH}
       - run:
           name: Installing AWS CLI
           working_directory: /
@@ -92,10 +89,10 @@ jobs:
           name: Deploy to AWS CloudFront
           command: |
             aws configure set preview.cloudfront
-            if ["${CURRENT_BRANCH}" == "main"] |
+            if ["${CIRCLE_BRANCH}" == "main"] |
             then
               aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID_PRODUCTION} --paths /\*
-            elif ["${CURRENT_BRANCH} == "staging"] |
+            elif ["${CIRCLE_BRANCH} == "staging"] |
             then 
               aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID_STAGING} --paths /\*
             else
