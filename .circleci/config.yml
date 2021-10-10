@@ -1,60 +1,75 @@
 version: 2.1
+executors:
+  app-executor:
+    docker:
+      - image: cimg/node:16.8
+    working_directory: ~/project
+
+aliases:
+  - &show-current-branch-name
+    run:
+      name: Display Current Branch
+      command: echo ${CIRCLE_BRANCH}
+  - &restore-cache
+    restore_cache:
+      keys:
+        - yarn-deps-{{ checksum "yarn.lock" }}
+        - yarn-deps-
+  - &install-dependencies
+    run:
+      name: Install Dependencies
+      command: yarn install
+  - &save-cache
+    save_cache:
+      paths:
+        - node_modules
+      key: yarn-deps-{{ checksum "yarn.lock" }}-{{ epoch }}
+  - &store-artifacts
+    store_artifacts:
+      path: yarn.lock
+  - &install-aws-cli
+    run:
+      name: Installing AWS CLI
+      working_directory: /
+      command: |
+        sudo apt-get -y -qq update
+        sudo apt-get install -y awscli
+        sudo apt-get install -y python3-pip python3-dev build-essential
+  - &build-project
+    run:
+      name: Build Project
+      command: |
+        yarn install
+        yarn build
+        cd build
+        zip ../build.zip -r * .[^.]*
+        echo "Build Successful"
 
 jobs:
   build:
-    docker:
-      - image: cimg/node:16.8
-    working_directory: ~/project
+    executor: app-executor
     steps:
       - checkout
-      - run:
-          name: Display Current Branch
-          command: echo ${CIRCLE_BRANCH}
-      - restore_cache:
-          keys:
-            - yarn-deps-{{ checksum "yarn.lock" }}
-            - yarn-deps-
-      - run:
-          name: Install Dependencies
-          command: yarn install
-      - save_cache:
-          paths:
-            - node_modules
-          key: yarn-deps-{{ checksum "yarn.lock" }}-{{ epoch }}
-      - store_artifacts:
-          path: yarn.lock
+      - *show-current-branch-name
+      - *restore-cache
+      - *install-dependencies
+      - *save-cache
+      - *store-artifacts
 
   deploy-to-aws-s3:
-    docker:
-      - image: cimg/node:16.8
-    working_directory: ~/project
+    executor: app-executor
     steps:
       - checkout
-      - run:
-          name: Display Current Branch
-          command: echo ${CIRCLE_BRANCH}
-      - run:
-          name: Installing AWS CLI
-          working_directory: /
-          command: |
-            sudo apt-get -y -qq update
-            sudo apt-get install -y awscli
-            sudo apt-get install -y python3-pip python3-dev build-essential
-      - run:
-          name: Build Project
-          command: |
-            yarn install
-            yarn build
-            cd build
-            zip ../build.zip -r * .[^.]*
-            echo "Build Successful"
+      - *show-current-branch-name
+      - *install-aws-cli
+      - *build-project
       - run:
           name: Deploy to AWS S3
           command: |
-            if ["${CIRCLE_BRANCH}" == "main"]
+            if [ "${CIRCLE_BRANCH}" == "main" ]
             then
               aws --region ${AWS_REGION} s3 sync ~/project/build s3://${AWS_BUCKET_PRODUCTION} --delete
-            elif ["${CIRCLE_BRANCH}" == "staging"]
+            elif [ "${CIRCLE_BRANCH}" == "staging" ]
             then 
               aws --region ${AWS_REGION} s3 sync ~/project/build s3://${AWS_BUCKET_STAGING} --delete
             else
@@ -62,37 +77,20 @@ jobs:
             fi
 
   deploy-to-aws-cloudfront:
-    docker:
-      - image: cimg/node:16.8
-    working_directory: ~/project
+    executor: app-executor
     steps:
       - checkout
-      - run:
-          name: Display Current Branch
-          command: echo ${CIRCLE_BRANCH}
-      - run:
-          name: Installing AWS CLI
-          working_directory: /
-          command: |
-            sudo apt-get -y -qq update
-            sudo apt-get install -y awscli
-            sudo apt-get install -y python3-pip python3-dev build-essential
-      - run:
-          name: Build Project
-          command: |
-            yarn install
-            yarn build
-            cd build
-            zip ../build.zip -r * .[^.]*
-            echo "Build Successful"
+      - *show-current-branch-name
+      - *install-aws-cli
+      - *build-project
       - run:
           name: Deploy to AWS CloudFront
           command: |
             aws configure set preview.cloudfront true
-            if ["${CIRCLE_BRANCH}" == "main"]
+            if [ "${CIRCLE_BRANCH}" == "main" ]
             then
               aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID_PRODUCTION} --paths /\*
-            elif ["${CIRCLE_BRANCH}" == "staging"]
+            elif [ "${CIRCLE_BRANCH}" == "staging" ]
             then 
               aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID_STAGING} --paths /\*
             else
