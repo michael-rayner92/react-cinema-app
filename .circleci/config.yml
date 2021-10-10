@@ -66,6 +66,16 @@ jobs:
           name: Run linting
           command: yarn lint
 
+  prettier:
+    executor: app-executor
+    steps:
+      - checkout
+      - *show-current-branch-name
+      - *restore-cache
+      - run:
+          name: Run prettier check
+          command: yarn prettier:check
+
   deploy-to-aws-s3:
     executor: app-executor
     steps:
@@ -80,7 +90,7 @@ jobs:
             then
               aws --region ${AWS_REGION} s3 sync ~/project/build s3://${AWS_BUCKET_PRODUCTION} --delete
             elif [ "${CIRCLE_BRANCH}" == "staging" ]
-            then 
+            then
               aws --region ${AWS_REGION} s3 sync ~/project/build s3://${AWS_BUCKET_STAGING} --delete
             else
               aws --region ${AWS_REGION} s3 sync ~/project/build s3://${AWS_BUCKET_DEV} --delete
@@ -101,7 +111,7 @@ jobs:
             then
               aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID_PRODUCTION} --paths /\*
             elif [ "${CIRCLE_BRANCH}" == "staging" ]
-            then 
+            then
               aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID_STAGING} --paths /\*
             else
               aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID_DEV} --paths /\*
@@ -120,10 +130,20 @@ workflows:
                 - develop
                 - staging
                 - production
+      - prettier:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - develop
+                - staging
+                - production
 
       - deploy-to-aws-s3:
           requires:
             - linting
+            - prettier
           filters:
             branches:
               only:

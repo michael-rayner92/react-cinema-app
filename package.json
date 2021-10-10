@@ -17,7 +17,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
+    "lint:fix": "eslint src --fix",
+    "prettier:check": "prettier --check {src/*.js*,src/**/*.js*} --ignore-unknown",
+    "prettier:fix": "prettier {src/*.js*,src/**/*.js*} --write --ignore-unknown"
   },
   "eslintConfig": {
     "extends": [
