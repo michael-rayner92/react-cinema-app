@@ -184,12 +184,12 @@ jobs:
       - checkout
       - *show-current-branch-name
       - run:
-          name: Terraform Destory
+          name: Terraform Destroy
           command: |
             cd aws/
             terraform init
             terraform workspace select ${CIRCLE_BRANCH} || terraform workspace new ${CIRCLE_BRANCH}
-            terraform destory --auto-approve
+            terraform destroy --auto-approve
 
 workflows:
   build_and_deploy:
@@ -204,6 +204,7 @@ workflows:
                 - develop
                 - staging
                 - main
+
       - prettier:
           requires:
             - build
@@ -259,6 +260,7 @@ workflows:
           type: approval
           requires:
             - deploy-to-aws-cloudfront
+
       - terraform-destroy:
           requires:
             - hold
