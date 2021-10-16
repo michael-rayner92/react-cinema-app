@@ -34,14 +34,14 @@ jobs:
       - run:
           name: Deploy to Heroku
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]
+            if [ "${CIRCLE_BRANCH}" == "main" ]
             then
-              git push https://heroku:$HEROKU_API_KEY@git.heroku.com/cinema-app-production.git ${CIRCLE_BRANCH}:master -f
+              git push https://heroku:$HEROKU_API_KEY@git.heroku.com/cinema-app-production.git ${CIRCLE_BRANCH}:main -f
             elif [ "${CIRCLE_BRANCH}" == "staging" ]
             then
-              git push https://heroku:$HEROKU_API_KEY@git.heroku.com/cinema-app-staging.git ${CIRCLE_BRANCH}:master -f
+              git push https://heroku:$HEROKU_API_KEY@git.heroku.com/cinema-app-staging.git ${CIRCLE_BRANCH}:main -f
             else
-              git push https://heroku:$HEROKU_API_KEY@git.heroku.com/cinema-app-dev.git ${CIRCLE_BRANCH}:master -f
+              git push https://heroku:$HEROKU_API_KEY@git.heroku.com/cinema-app-dev.git ${CIRCLE_BRANCH}:main -f
             fi
 
 workflows:
@@ -56,4 +56,4 @@ workflows:
               only:
                 - develop
                 - staging
-                - master
+                - main
