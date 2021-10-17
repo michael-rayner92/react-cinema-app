@@ -1,0 +1,29 @@
+.paginate-button {
+  background-color: #dd003f;
+  padding: 8px 15px;
+  text-transform: uppercase;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  margin: 0 15px;
+  outline: none !important;
+  transition: 0.3s ease-out;
+  user-select: none;
+
+  &:hover {
+    background-color: darken(#dd003f, 5%);
+  }
+}
+
+.disable {
+  cursor: pointer;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.pageCount {
+  color: #fff;
+  margin: 0 5px;
+  padding: 10px 5px;
+  user-select: none;
+}
